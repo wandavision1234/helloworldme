@@ -1,8 +1,6 @@
 # starcoffee
 
 
-![MSA_CoffeChain_logo_3](https://user-images.githubusercontent.com/26760226/106547009-b6e1b880-654f-11eb-8c4b-4526f2200c72.jpg)
-
 # Table of contents
 
 - [서비스 시나리오](#서비스-시나리오)
@@ -87,34 +85,15 @@ Event 도출
     - 서브 도메인과 바운디드 컨텍스트의 분리:  각 팀의 KPI 별로 아래와 같이 관심 구현 스토리를 나눠가짐
 
 ### 기능적 요구사항 검증
-
-![image](https://user-images.githubusercontent.com/75309297/106581014-bcf28c00-6585-11eb-867d-df5c2fe91896.png)
-
-    - 고객이 커피를 주문한다. (OK)
-    - 커피가 만들어진다. (OK)
-    - 커피가 만들어 지면 재고가 Stock에 전달된다. (OK)
-    
-![image](https://user-images.githubusercontent.com/75309297/106581647-6d609000-6586-11eb-88ce-cf81b4681b47.png)
-
-    - 고객이 커피를 주문한다. (OK)
-    - 커피가 만들어진다. (OK)
-    - 커피가 생산이 완료되면 고객이 order에서 조회 할 수 있다.(OK)
-      
-![image](https://user-images.githubusercontent.com/75309297/106582664-96cdeb80-6587-11eb-8a21-d7f7aba5492d.png)
-
-    - 고객이 주문을 취소할 수 있다.(OK)
-    - 주문이 취소되면 커피생산을 취소한다.(OK)
-    - 고객이 order에서 조회 할 수 있다. (OK)
-
-![image](https://user-images.githubusercontent.com/75309297/106582947-e7454900-6587-11eb-8819-d65f48ae10bd.png)
-
-    - 고객이 MyPage에서 커피주문 내역을 볼 수 있어야 한다.(OK)
+ 1. 고객은 커피를 주문한다.(O)
+ 2. 고객은 주문 후 결제 한다.(O)
+ 3. 결제가 완료 되면 커피를 만든다.(O)
+ 4. 결제가 취소되면 커피를 만들지 않는다.(O)
+ 5. 고객이 주문상태를 조회 할 수 있다.(O)
        
 ### 비기능 요구사항
-
-    - 생산취소가 되지않은 건에 대해서는 절대 주문취소를 하지 않는다. (점주가 손해보고는 못 사는 성격)
-    - 재고변경(차감)이 되지않은 건에 대해서는 재고변경 프로세스가 진행되면 안된다.
-    - 재료창고의 크기를 감안하여 모든 메뉴의 재고는 100개를 시작으로 차감된다.  
+ 1. 결제가 완료 되지 않은 주문건은 커피를 만들지 않아야 한다.(O)
+ 2. 커피 만들 때 장애가 발생하더라도 주문은 계속 받아야 한다.(O)
 
 # 구현
 서비스를 로컬에서 실행하는 방법은 아래와 같다 (각자의 포트넘버는 8081 ~ 8084 이다)
@@ -320,12 +299,10 @@ CQRS 구현을 위해 고객의 예약 상황을 확인할 수 있는 Mypage를 
  
 - 주문이 되었다(Ordered)는 도메인 이벤트를 카프카로 송출한다(Publish)
  
-![10_비동기 호출(주문_제조)](https://user-images.githubusercontent.com/77084784/106619371-e0343000-65b3-11eb-9599-ca40b275751b.jpg)
 
 - 제품(product)에서는 주문(ordered) 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다.
 - 주문접수(Order)는 송출된 주문완료(ordered) 정보를 제품(product)의 Repository에 저장한다.:
  
-![11_비동기 호출(주문_제조)](https://user-images.githubusercontent.com/77084784/106619501-01951c00-65b4-11eb-88e9-8870bad805f7.jpg)
 
 제품(product) 시스템은 주문(order)/제고(stock)와 완전히 분리되어있으며(sync transaction 없음), 이벤트 수신에 따라 처리되기 때문에, 제품(product)이 유지보수로 인해 잠시 내려간 상태라도 주문을 받는데 문제가 없다.(시간적 디커플링):
 ```bash
@@ -337,7 +314,7 @@ http http://localhost:8081/orders item="Americano" qty=1  #Success
 #주문상태 확인
 http GET http://localhost:8081/orders/1    # 상태값이 'Completed'이 아닌 'Requested'에서 멈춤을 확인
 ```
-![12_time분리_1](https://user-images.githubusercontent.com/77084784/106619595-196ca000-65b4-11eb-892e-a0ad2fa1b7f0.jpg)
+
 ```bash
 #제품(product) 서비스 기동
 cd product
@@ -346,7 +323,7 @@ mvn spring-boot:run
 #주문상태 확인
 http GET http://localhost:8081/orders/1     # 'Requested' 였던 상태값이 'Completed'로 변경된 것을 확인
 ```
-![12_time분리_2](https://user-images.githubusercontent.com/77084784/106619700-330de780-65b4-11eb-818e-70152aba4400.jpg)
+
 
 # 운영
 
@@ -401,50 +378,47 @@ kubectl get all -n coffee
 ## 동기식 호출 / 서킷 브레이킹 / 장애격리
 * 서킷 브레이킹 프레임워크의 선택: Spring FeignClient + Hystrix 옵션을 사용하여 구현함
 
-시나리오는 생산(product)-->재고(stock) 시의 연결을 RESTful Request/Response 로 연동하여 구현이 되어있고, 재고 사용 요청이 과도할 경우 CB 를 통하여 장애격리.
+Spring Spring FeignClient + Hystrix 옵션을 사용하여 테스팅 진행 신청(order) → 결제(payment) 시 연결을 REST API로 Response/Request로 구현되어 있으며, 과도한 신청으로 결제가 문제가 될 때 서킷브레이커로 장애격리
 
 - Hystrix 를 설정:  요청처리 쓰레드에서 처리시간이 610 밀리가 넘어서기 시작하여 어느정도 유지되면 CB 회로가 닫히도록 (요청을 빠르게 실패처리, 차단) 설정
-```
-# application.yml
-feign:
-  hystrix:
-    enabled: true
-    
-hystrix:
-  command:
-    # 전역설정
-    default:
-      execution.isolation.thread.timeoutInMilliseconds: 610
+- order >a pplication.yml
+![HISTRIX](https://user-images.githubusercontent.com/87048655/131716947-76478178-f89a-4690-a6cb-e57a59fb2aed.png)
 
-```
 
 * siege 툴 사용법:
 ```
- siege가 생성되어 있지 않으면:
- kubectl run siege --image=apexacme/siege-nginx -n coffee
+ siege 생성
+ kubectl create deploy siege --image=ghcr.io/acmexii/siege-nginx:latest
+
  siege 들어가기:
- kubectl exec -it pod/siege-5c7c46b788-4rn4r -c siege -n coffee -- /bin/bash
- siege 종료:
- Ctrl + C -> exit
+ kubectl exec pod/siege-c54d6bdc7-8lc8f-it -- /bin/bash
+ 
 ```
+
 * 부하테스터 siege 툴을 통한 서킷 브레이커 동작 확인:
 - 동시사용자 100명
 - 60초 동안 실시
 
 ```
-siege -c10 -t60S -r10 -v --content-type "application/json" 'http://10.0.209.210:8080/products POST {"orderId":1, "status":"Requested", "productName":"Ame", "qty":1}'
+siege -c100 -t60S -r10 -v --content-type "application/json" 'http://10.100.157.15:8080/orders POST {"orderId":1, "price":123, "status":"Order Start"}'
 ```
-- 부하 발생하여 CB가 발동하여 요청 실패처리하였고, 밀린 부하가 stock에서 처리되면서 다시 product를 받기 시작
+- 부하 발생하여 CB가 발동하여 요청 실패처리하였고, 밀린 부하가 payment에서 처리되면서 다시 product를 받기 시작
 
-![image](https://user-images.githubusercontent.com/6468351/106703226-31ccd100-662d-11eb-9463-a10bb211cd70.png)
+![siege오류발생중](https://user-images.githubusercontent.com/87048655/131718991-a9ce9aa2-9896-4ef3-9d04-ada9f87c2cb2.png)
 
 - report
 
-![image](https://user-images.githubusercontent.com/6468351/106702534-da7a3100-662b-11eb-99f8-b54962eff735.png)
+![siege결과](https://user-images.githubusercontent.com/87048655/131719101-0c483b16-a6f9-493f-abce-9ef8d09aadee.png)
 
-- CB 잘 적용됨을 확인
+
+- 동시사용자 1명
+```
+siege -c1 -t60S -r10 -v --content-type "application/json" 'http://10.100.100.106:8080/orders POST {"orderId":1, "price":123, "status":"Order Start"}'
+```
 
 ## 오토스케일 아웃
+
+
 
 ## 무정지 재배포
 - 먼저 무정지 재배포가 100% 되는 것인지 확인하기 위해서 Autoscale 이나 CB 설정을 제거함
