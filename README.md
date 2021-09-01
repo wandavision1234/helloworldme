@@ -221,8 +221,12 @@ Transfer-Encoding: chunked
 
 ## 폴리글랏 퍼시스턴스
 make MSA의 경우 H2 DB인 주문과 제작와 달리 Hsql으로 구현하여 MSA간 서로 다른 종류의 DB간에도 문제 없이 동작하여 다형성을 만족하는지 확인하였다. 
+
 pom.xml 설정
+
 ![polyglot](https://user-images.githubusercontent.com/87048655/131714280-180bbafb-8b9d-4e0b-ba9e-6db8d6d2ef0c.png)
+
+*************결과넣기****************************
 
 ## Gateway 적용
 
@@ -234,6 +238,10 @@ gateway 테스트
 ```bash
 http POST localhost:8080/orders orderId=2 price=2000 status="order"
 ```
+
+
+*************결과넣기****************************
+
 
 ## 동기식 호출 과 Fallback 처리
 
@@ -247,44 +255,27 @@ http POST localhost:8080/orders orderId=2 price=2000 status="order"
 
 
 
-- 주문 취소 시 제고 변경을 먼저 요청하도록 처리
-```java
-// (app) Order.java (Entity)
+- 주문을 받은 직후(@PostPersist) 결제를 요청하도록 처리
+![order-payment호출](https://user-images.githubusercontent.com/87048655/131720220-12bebf26-66c0-4703-b93d-b8461456c9c0.png)
 
-    @PreUpdate
-    public void onPreUpdate(){
-
-       msacoffeechainsample.external.Product product = new msacoffeechainsample.external.Product();
-       product.setId(orderCanceled.getProductId());
-       product.setOrderId(orderCanceled.getId());
-       product.setProductName(orderCanceled.getProductName());
-       product.setStatus(orderCanceled.getStatus());
-       product.setQty(orderCanceled.getQty());
-        
-       // req/res
-       OrderApplication.applicationContext.getBean(msacoffeechainsample.external.ProductService.class)
-                    .cancel(product.getId(), product);
-    }
-```
-
-
-- 동기식 호출이 적용되서 제품 서비스에 장애가 나면 주문 서비스도 못받는다는 것을 확인:
+- 동기식 호출에서는 호출 시간에 따른 타임 커플링이 발생하며, 결제 시스템이 장애가 나면 주문도 못받는다는 것을 확인:
 
 ```bash
-#제품(payment) 서비스를 잠시 내려놓음 (ctrl+c)
+#결재(payment) 서비스를 잠시 내려놓음 (ctrl+c)
 
-#주문취소 (order)
-http PATCH http://localhost:8081/orders/1 status="Canceled"    #Fail
-```
+# 주문요청 (order)
+http POST http://localhost:8081/orders orderId=1 price=1000 status="order start"
 
+***********************오류캡쳐*************************
 
-```bash
-#제품(product) 서비스 재기동
-cd product
+#결재(payment) 서비스 재기동
+cd payment
 mvn spring-boot:run
 
-#주문취소 (order)
-http PATCH http://localhost:8081/orders/2 status="Canceled"    #Success
+#주문요청 (order)
+http POST http://localhost:8081/orders orderId=1 price=1000 status="order start"
+
+***********************정상처리캡쳐*************************
 ```
 
 
@@ -292,32 +283,39 @@ http PATCH http://localhost:8081/orders/2 status="Canceled"    #Success
 
 CQRS 구현을 위해 고객의 예약 상황을 확인할 수 있는 Mypage를 구성.
 
+***********************정상처리캡쳐*************************
+
+
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 
 
 
-결제(payment)이 이루어진 후에 생산(order)로 이를 알려주는 행위는 비 동기식으로 처리하여 제품(product)의 처리를 위하여 주문이 블로킹 되지 않아도록 처리한다.
+결제(payment)이 이루어진 후에 생산(make)으로 이를 알려주는 행위는 비 동기식으로 처리하여 생산(make)의 처리를 위하여 주문(order)이 블로킹 되지 않아도록 처리한다.
  
-- 주문이 되었다(Ordered)는 도메인 이벤트를 카프카로 송출한다(Publish)
- 
+- 이를 위하여 결제이력에 기록을 남긴 후에 곧바로 결제승인이 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
+ ![비동기식_payment](https://user-images.githubusercontent.com/87048655/131721010-91ac60ac-feee-45f0-b688-2e16edad78a1.png)
 
-- 제품(product)에서는 주문(ordered) 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다.
+- 생산 서비스에서는 결제승인 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
+![make_handler](https://user-images.githubusercontent.com/87048655/131721373-2b28c28c-2254-4204-a0b2-4cbf9eee3486.png)
+
 - 주문접수(Order)는 송출된 주문완료(ordered) 정보를 제품(product)의 Repository에 저장한다.:
  
 
-제품(product) 시스템은 주문(order)/제고(stock)와 완전히 분리되어있으며(sync transaction 없음), 이벤트 수신에 따라 처리되기 때문에, 제품(product)이 유지보수로 인해 잠시 내려간 상태라도 주문을 받는데 문제가 없다.(시간적 디커플링):
+생산 시스템은 주문/결제와 완전히 분리되어있으며, 이벤트 수신에 따라 처리되기 때문에, 생산시스템이 유지보수로 인해 잠시 내려간 상태라도 주문을 받는데 문제가 없다:(시간적 디커플링):
+
+
 ```bash
-#제품(product) 서비스를 잠시 내려놓음 (ctrl+c)
+#생산(make) 서비스를 잠시 내려놓음 (ctrl+c)
 
 #주문하기(order)
-http http://localhost:8081/orders item="Americano" qty=1  #Success
+http http://localhost:8081/orders orderId=1 price=1000 status="order start"
 
 #주문상태 확인
 http GET http://localhost:8081/orders/1    # 상태값이 'Completed'이 아닌 'Requested'에서 멈춤을 확인
 ```
 
 ```bash
-#제품(product) 서비스 기동
-cd product
+#생산(make) 서비스 기동
+cd make
 mvn spring-boot:run
 
 #주문상태 확인
