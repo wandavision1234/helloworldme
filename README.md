@@ -74,7 +74,7 @@ Event 도출
 ![06 bounded context도출](https://user-images.githubusercontent.com/87048655/131767597-21ef6544-a7b5-4069-b5da-41b6b15b7f43.png)
 
 - View 추가
-![07 cqrs](https://user-images.githubusercontent.com/87048655/131767598-9b230a01-474e-452b-aa24-439ccaacbee6.png)
+![07 cqrs](https://user-images.githubusercontent.com/87048655/131768198-f2570b31-c25a-444f-be94-54629748360c.png)
 
 - 완성 모형: Pub/Sub, Req/Res 추가(점선은 Pub/Sub, 실선은 Req/Resp)
 ![08 Context 매핑](https://user-images.githubusercontent.com/87048655/131767601-2b0b35b1-bb14-4405-8bfe-8f780bffb934.png)
