@@ -79,6 +79,11 @@ Event 도출
 - 완성 모형: Pub/Sub, Req/Res 추가(점선은 Pub/Sub, 실선은 Req/Resp)
 ![08 Context 매핑](https://user-images.githubusercontent.com/87048655/131767601-2b0b35b1-bb14-4405-8bfe-8f780bffb934.png)
 
+### SAGA 패턴
+- 각 서비스의 트랜잭션은 단일 서비스 내의 데이터를 갱신하는 일종의 로컬 트랜잭션 방법이고 서비스의 트랜잭션이 완료 후에 다음 서비스가 트리거 되어, 트랜잭션을 실행하는 패턴임
+- 아래 그림과 같이 Saga패턴에 맞춘 트랜잭션 처리(빨간색), 취소 시 자동으로 Roll-Back처리(파란색)가 되도록 연쇄적인 트리거 처리를 함
+![saga패털](https://user-images.githubusercontent.com/87048655/131875525-c4271f4c-90b3-4da0-8e1c-d03f72fd3075.png)
+
 
 ### 헥사고날 아키텍처 다이어그램 도출 (Polyglot)
 
