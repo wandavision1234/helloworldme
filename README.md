@@ -35,20 +35,6 @@
  1. 결제가 완료 되지 않은 주문건은 커피를 만들지 않아야 한다.(Request-Response 방식 처리)
  2. 커피 만들 때 장애가 발생하더라도 주문은 계속 받아야 한다.(pub/sub)
  
-# 체크포인트
-- Saga
-- CQRS
-- Correlation
-- Req/Resp
-- Gateway
-- Deploy/ Pipeline
-- Circuit Breaker
-- Autoscale (HPA)
-- Zero-downtime deploy (Readiness Probe)
-- Config Map/ Persistence Volume
-- Polyglot
-- Self-healing (Liveness Probe)
-
 ## 이벤트 스토밍 결과
 MSAEZ에서 Event Storming 수행
 Event 도출
