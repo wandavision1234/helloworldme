@@ -56,24 +56,28 @@ Event 도출
 ### 이벤트 도출
 
 - Event 도출
-
-
-- Actor, Command 부착
-
-
+![01 이벤트도출](https://user-images.githubusercontent.com/87048655/131767590-3049111f-c900-44e1-a901-8d993c0f3763.png)
 
 - Policy 부착
+![02  policy 추가](https://user-images.githubusercontent.com/87048655/131767591-373d1387-6d8d-41b7-8383-d5b482afd992.png)
 
+- Command 부착
+![03  command추가](https://user-images.githubusercontent.com/87048655/131767593-72f97002-6599-4ceb-a615-95b3e9466031.png)
 
+- Actor 부착
+![04 actor추가](https://user-images.githubusercontent.com/87048655/131767595-cb616d69-ccb4-4fa1-8f72-27ad9dd9f635.png)
 
 - Aggregate 부착
+![05 aggregate추가](https://user-images.githubusercontent.com/87048655/131767596-d2159de7-742c-4530-a1af-10a21e858431.png)
 
+- Bounded Context 묶기
+![06 bounded context도출](https://user-images.githubusercontent.com/87048655/131767597-21ef6544-a7b5-4069-b5da-41b6b15b7f43.png)
 
-
-- View 추가 및 Bounded Context 묶기
-
+- View 추가
+![07 cqrs](https://user-images.githubusercontent.com/87048655/131767598-9b230a01-474e-452b-aa24-439ccaacbee6.png)
 
 - 완성 모형: Pub/Sub, Req/Res 추가(점선은 Pub/Sub, 실선은 Req/Resp)
+![08 Context 매핑](https://user-images.githubusercontent.com/87048655/131767601-2b0b35b1-bb14-4405-8bfe-8f780bffb934.png)
 
 
 ### 헥사고날 아키텍처 다이어그램 도출 (Polyglot)
@@ -188,33 +192,33 @@ Entity Pattern 과 Repository Pattern 을 적용하여 JPA 를 통하여 다양�
 - 적용 후 REST API 의 테스트
 ```
 # order 서비스의 주문처리
-http POST localhost:8081/orders orderId=1 price=1000 status="order start"
+http POST localhost:8081/orders orderId=1 price=1000 status="order in"
 
 # payment 서비스의 결제처리
 http POST localhost:8088/payments orderId=1 status="paying"
 
 # make 서비스의 생산처리
-http localhost:8088/makes orderId=1 status="making"
+http POST localhost:8088/makes orderId=1 status="making"
 
 # 주문 상태 확인    
-http localhost:8081/orders/1
-HTTP/1.1 200
-Content-Type: application/hal+json;charset=UTF-8
-Date: Thu, 19 Aug 2021 02:05:39 GMT
-Transfer-Encoding: chunked
+http http://localhost:8088/orders/1
+HTTP/1.1 201 Created
+Content-Type: application/json;charset=UTF-8
+Date: Thu, 02 Sep 2021 00:27:35 GMT
+Location: http://localhost:8081/orders/1
+transfer-encoding: chunked
 
 {
     "_links": {
         "order": {
             "href": "http://localhost:8081/orders/1"
-        },
         "self": {
             "href": "http://localhost:8081/orders/1"
         }
     },
-    "orderId": 0,
-    "price": 1000,
-    "status": "order start"
+    "orderId": 1,
+    "price": 100,
+    "status": "order in"
 }
 
 ```
@@ -226,21 +230,66 @@ pom.xml 설정
 
 ![polyglot](https://user-images.githubusercontent.com/87048655/131714280-180bbafb-8b9d-4e0b-ba9e-6db8d6d2ef0c.png)
 
-*************결과넣기****************************
+- 오더(order) 주문
+
+![poliglot1](https://user-images.githubusercontent.com/87048655/131765372-cedd53bf-68fa-4fed-a905-b70642f9411f.png)
+
+- 생산(make) 조회
+![poliglot2](https://user-images.githubusercontent.com/87048655/131765472-6fbf278d-d603-4397-93e4-1c55a3c28163.png)
 
 ## Gateway 적용
 
 gateway > resources > applitcation.yml 설정
 ![gateway](https://user-images.githubusercontent.com/87048655/131714550-fe3f9561-a732-4587-8853-44af97422baf.png)
 
-gateway 테스트
 
 ```bash
-http POST localhost:8080/orders orderId=2 price=2000 status="order"
+http POST localhost:8088/orders orderId=1 price=100 status="order in"
 ```
 
+```bash
+http localhost:8088/orders
+HTTP/1.1 200 OK
+Content-Type: application/hal+json;charset=UTF-8
+Date: Thu, 02 Sep 2021 01:11:40 GMT
+transfer-encoding: chunked
 
-*************결과넣기****************************
+{
+    "_embedded": {
+        "orders": [
+            {
+                "_links": {
+                    "order": {
+                        "href": "http://localhost:8081/orders/1"
+                    },
+                    "self": {
+                        "href": "http://localhost:8081/orders/1"
+                    }
+                },
+                "orderId": 1,
+                "price": 100,
+                "status": "order in"
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8081/profile/orders"
+        },
+        "self": {
+            "href": "http://localhost:8081/orders{?page,size,sort}",
+            "templated": true
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 1,
+        "totalPages": 1
+    }
+}
+```
+
 
 
 ## 동기식 호출 과 Fallback 처리
@@ -265,25 +314,27 @@ http POST localhost:8080/orders orderId=2 price=2000 status="order"
 
 # 주문요청 (order)
 http POST http://localhost:8081/orders orderId=1 price=1000 status="order start"
+```
+![동기식호출(에러)](https://user-images.githubusercontent.com/87048655/131766191-3323187b-0dd1-4397-8b1b-6e2daba023ec.png)
 
-***********************오류캡쳐*************************
-
+```bash
 #결재(payment) 서비스 재기동
 cd payment
 mvn spring-boot:run
 
 #주문요청 (order)
 http POST http://localhost:8081/orders orderId=1 price=1000 status="order start"
-
-***********************정상처리캡쳐*************************
 ```
+![동기식호출(정상)](https://user-images.githubusercontent.com/87048655/131766370-b8fb1238-64a9-4621-96b2-223e08a21fb8.png)
+
 
 
 ## CQRS
 
 CQRS 구현을 위해 고객의 예약 상황을 확인할 수 있는 Mypage를 구성.
 
-***********************정상처리캡쳐*************************
+![cqrs](https://user-images.githubusercontent.com/87048655/131765858-c454f9de-c44c-4b9c-afde-05ba5f7dd2b9.png)
+
 
 
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 
@@ -296,12 +347,8 @@ CQRS 구현을 위해 고객의 예약 상황을 확인할 수 있는 Mypage를 
 
 - 생산 서비스에서는 결제승인 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
 ![make_handler](https://user-images.githubusercontent.com/87048655/131721373-2b28c28c-2254-4204-a0b2-4cbf9eee3486.png)
-
-- 주문접수(Order)는 송출된 주문완료(ordered) 정보를 제품(product)의 Repository에 저장한다.:
  
-
 생산 시스템은 주문/결제와 완전히 분리되어있으며, 이벤트 수신에 따라 처리되기 때문에, 생산시스템이 유지보수로 인해 잠시 내려간 상태라도 주문을 받는데 문제가 없다:(시간적 디커플링):
-
 
 ```bash
 #생산(make) 서비스를 잠시 내려놓음 (ctrl+c)
@@ -309,9 +356,13 @@ CQRS 구현을 위해 고객의 예약 상황을 확인할 수 있는 Mypage를 
 #주문하기(order)
 http http://localhost:8081/orders orderId=1 price=1000 status="order start"
 
-#주문상태 확인
-http GET http://localhost:8081/orders/1    # 상태값이 'Completed'이 아닌 'Requested'에서 멈춤을 확인
 ```
+![비동기식호출(정상)](https://user-images.githubusercontent.com/87048655/131766588-6abacc61-1551-4ad0-8423-e63add5b8cfb.png)
+
+```bash
+http GET http://localhost:8081/orders/1     # 'order start'상태
+```
+![비동기식호출(정상_mypage반영전)](https://user-images.githubusercontent.com/87048655/131766843-ef083536-98cb-4e6f-999a-a9038f6f4864.png)
 
 ```bash
 #생산(make) 서비스 기동
@@ -319,32 +370,15 @@ cd make
 mvn spring-boot:run
 
 #주문상태 확인
-http GET http://localhost:8081/orders/1     # 'Requested' 였던 상태값이 'Completed'로 변경된 것을 확인
+http localhost:8084/mypages/4   # 'order start' 였던 상태값이 'making'로 변경된 것을 확인
 ```
-
+![비동기식호출(정상_mypage반영후)](https://user-images.githubusercontent.com/87048655/131767068-ed3e7256-5944-41c1-9129-9302fe85f07f.png)
 
 # 운영
 
-## Deploy / Pipeline
-- 네임스페이스 만들기
-```bash
-kubectl create ns coffee
-kubectl get ns
-```
-![kubectl_create_ns](https://user-images.githubusercontent.com/26760226/106624530-1922d380-65b9-11eb-916a-5b6956a013ad.png)
+## Deploy
+- AWS IAM설정
 
-- 폴더 만들기, 해당 폴더로 이동
-``` bash
-mkdir coffee
-cd coffee
-```
-![mkdir_coffee](https://user-images.githubusercontent.com/26760226/106623326-d7ddf400-65b7-11eb-92af-7b8eacb4eeb3.png)
-
-- 소스 가져오기
-``` bash
-git clone https://github.com/MSACoffeeChain/main.git
-```
-![git_clone](https://user-images.githubusercontent.com/26760226/106623315-d6143080-65b7-11eb-8bf0-b7604d2dd2db.png)
 
 - 빌드 하기
 ``` bash
