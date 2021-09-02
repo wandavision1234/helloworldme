@@ -226,7 +226,7 @@ transfer-encoding: chunked
 ## 폴리글랏 퍼시스턴스
 make MSA의 경우 H2 DB인 주문과 제작와 달리 Hsql으로 구현하여 MSA간 서로 다른 종류의 DB간에도 문제 없이 동작하여 다형성을 만족하는지 확인하였다. 
 
-pom.xml 설정
+pom.xml 설정 <br>
 
 ![polyglot](https://user-images.githubusercontent.com/87048655/131714280-180bbafb-8b9d-4e0b-ba9e-6db8d6d2ef0c.png)
 
@@ -239,7 +239,7 @@ pom.xml 설정
 
 ## Gateway 적용
 
-gateway > resources > applitcation.yml 설정
+gateway > resources > applitcation.yml 설정 <br>
 ![gateway](https://user-images.githubusercontent.com/87048655/131714550-fe3f9561-a732-4587-8853-44af97422baf.png)
 
 
@@ -298,7 +298,7 @@ transfer-encoding: chunked
 호출 프로토콜은 이미 앞서 Rest Repository 에 의해 노출되어있는 REST 서비스를 FeignClient 를 이용하여 호출하도록 한다. 
 
 - 서비스를 호출하기 위하여 FeignClient 를 이용하여 Service 대행 인터페이스 (Proxy) 를 구현 
-(app) order > external > PaymentService.java
+(app) order > external > PaymentService.java <br>
 
 ![feign client](https://user-images.githubusercontent.com/87048655/131715139-b165d549-4464-4630-8833-75ba31830c71.png)
 
@@ -331,7 +331,7 @@ http POST http://localhost:8081/orders orderId=1 price=1000 status="order start"
 
 ## CQRS
 
-CQRS 구현을 위해 고객의 예약 상황을 확인할 수 있는 Mypage를 구성.
+CQRS 구현을 위해 고객의 예약 상황을 확인할 수 있는 Mypage를 구성. <br>
 
 ![cqrs](https://user-images.githubusercontent.com/87048655/131765858-c454f9de-c44c-4b9c-afde-05ba5f7dd2b9.png)
 
@@ -340,15 +340,15 @@ CQRS 구현을 위해 고객의 예약 상황을 확인할 수 있는 Mypage를 
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 
 
 
-결제(payment)이 이루어진 후에 생산(make)으로 이를 알려주는 행위는 비 동기식으로 처리하여 생산(make)의 처리를 위하여 주문(order)이 블로킹 되지 않아도록 처리한다.
+결제(payment)이 이루어진 후에 생산(make)으로 이를 알려주는 행위는 비 동기식으로 처리하여 생산(make)의 처리를 위하여 주문(order)이 블로킹 되지 않아도록 처리한다. <br>
  
-- 이를 위하여 결제이력에 기록을 남긴 후에 곧바로 결제승인이 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
+- 이를 위하여 결제이력에 기록을 남긴 후에 곧바로 결제승인이 되었다는 도메인 이벤트를 카프카로 송출한다(Publish) <br>
  ![비동기식_payment](https://user-images.githubusercontent.com/87048655/131721010-91ac60ac-feee-45f0-b688-2e16edad78a1.png)
 
-- 생산 서비스에서는 결제승인 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
+- 생산 서비스에서는 결제승인 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다: <br>
 ![make_handler](https://user-images.githubusercontent.com/87048655/131721373-2b28c28c-2254-4204-a0b2-4cbf9eee3486.png)
  
-생산 시스템은 주문/결제와 완전히 분리되어있으며, 이벤트 수신에 따라 처리되기 때문에, 생산시스템이 유지보수로 인해 잠시 내려간 상태라도 주문을 받는데 문제가 없다:(시간적 디커플링):
+생산 시스템은 주문/결제와 완전히 분리되어있으며, 이벤트 수신에 따라 처리되기 때문에, 생산시스템이 유지보수로 인해 잠시 내려간 상태라도 주문을 받는데 문제가 없다:(시간적 디커플링): <br>
 
 ```bash
 #생산(make) 서비스를 잠시 내려놓음 (ctrl+c)
@@ -378,77 +378,136 @@ http localhost:8084/mypages/4   # 'order start' 였던 상태값이 'making'로 
 
 ## Deploy
 - AWS IAM설정
-
-
-- 빌드 하기
 ``` bash
-cd order
+aws configure
+AWS Access Key ID [None]: (IAM에서 생성했던 Acess Key) 
+AWS Secret Access Key [None]: (IAM에서 생성했던 Secret Acess Key) 
+Default region name [None]: (리전) 
+Default output format [None]: 
+```
+- EKS Cluster생성 하기
+``` bash
+eksctl create cluster --name starcoffee1 --version 1.17 --nodegroup-name standard-workers --node-type t3.medium --nodes 2 --nodes-min 1 --nodes-max 4  
+```
+- ECR image repository 생성
+``` bash
+aws ecr create-repository --repository-name starcoffee-order --image-scanning-configuration scanOnPush=true --region ap-northeast-2
+aws ecr create-repository --repository-name starcoffee-make --image-scanning-configuration scanOnPush=true --region ap-northeast-2
+aws ecr create-repository --repository-name starcoffee-payment --image-scanning-configuration scanOnPush=true --region ap-northeast-2
+aws ecr create-repository --repository-name starcoffee-mypage --image-scanning-configuration scanOnPush=true --region ap-northeast-2
+aws ecr create-repository --repository-name starcoffee-gateway --image-scanning-configuration scanOnPush=true --region ap-northeast-2
+```
+
+-  AWS ECR Login 설정
+``` bash
+aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 980880891166.dkr.ecr.ap-northeast-2.amazonaws.com
+```
+
+배포 진행한다.
+```
 mvn package
-```
-![mvn_package](https://user-images.githubusercontent.com/26760226/106623329-d7ddf400-65b7-11eb-8d1b-55ec35dfb01e.png)
 
-- 도커라이징 : Azure 레지스트리에 도커 이미지 푸시하기
-```bash
-az acr build --registry skccteam03 --image skccteam03.azurecr.io/order:latest .
-```
-![az_acr_build](https://user-images.githubusercontent.com/26760226/106706352-e9181680-6632-11eb-8f22-0fbf80a9a575.png)
+- 이미지 생성
+docker build -t  980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-order:v15 .
+docker build -t  980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-make:1 .
+docker build -t  980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-payment:v3 .
+docker build -t  980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-mypage:v2 .
+docker build -t  980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-gateway:v1 .
 
-- 컨테이너라이징 : 디플로이 생성 확인
-```bash
-kubectl apply -f kubernetes/deployment.yml
-kubectl get all -n coffee
-```
-![kubectl_apply](https://user-images.githubusercontent.com/26760226/106624114-a7e32080-65b8-11eb-965b-b1323c52d58e.png)
+- 도커 푸시
+docker push 980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-order:v15
+docker push 980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-make:v1 
+docker push 980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-payment:v3
+docker push 980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-mypage:v2 
+docker push 980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-gateway:v1 
 
-- 컨테이너라이징 : 서비스 생성 확인
-```bash
-kubectl expose deploy order --type="ClusterIP" --port=8080 -n coffee
-kubectl get all -n coffee
+- 컨테이너라이징
+kubectl create deploy order --image=980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-order:v15
+kubectl create deploy make --image=980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-make:v1
+kubectl create deploy payment --image=980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-payment:v6
+kubectl create deploy mypage --image=980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-mypage:v2
+kubectl create deploy gateway --image=980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-gateway:v1
+
+- 서비스생성(Gateway는 LoadBalancer 로 생성)
+kubectl expose deploy order --type=ClusterIP --port=8080
+kubectl expose deploy make --type=ClusterIP --port=8080
+kubectl expose deploy payment --type=ClusterIP --port=8080
+kubectl expose deploy mypage --type=ClusterIP --port=8080
+kubectl expose deploy gateway --type=LoadBalancer --port=8080
+
+-생성 정보 확인하기
+kubectl get all
 ```
-![kubectl_expose](https://user-images.githubusercontent.com/26760226/106623324-d7455d80-65b7-11eb-809c-165bfa828bbe.png)
+![kubectl_get_all](https://user-images.githubusercontent.com/87048655/131770160-0a88b384-6a4b-49a2-8c2d-63ab93f7ac51.png)
+
 
 ## 동기식 호출 / 서킷 브레이킹 / 장애격리
 * 서킷 브레이킹 프레임워크의 선택: Spring FeignClient + Hystrix 옵션을 사용하여 구현함
-
 Spring Spring FeignClient + Hystrix 옵션을 사용하여 테스팅 진행 신청(order) → 결제(payment) 시 연결을 REST API로 Response/Request로 구현되어 있으며, 과도한 신청으로 결제가 문제가 될 때 서킷브레이커로 장애격리
 
 - Hystrix 를 설정:  요청처리 쓰레드에서 처리시간이 610 밀리가 넘어서기 시작하여 어느정도 유지되면 CB 회로가 닫히도록 (요청을 빠르게 실패처리, 차단) 설정
-- order >a pplication.yml
+- order > application.yml
+
 ![HISTRIX](https://user-images.githubusercontent.com/87048655/131716947-76478178-f89a-4690-a6cb-e57a59fb2aed.png)
 
+- 강제 부하설정
+![payment_부하처리](https://user-images.githubusercontent.com/87048655/131771061-8ccb63c2-ccff-4d46-bb2f-d674616276fb.png)
 
-* siege 툴 사용법:
+* siege
 ```
  siege 생성
  kubectl create deploy siege --image=ghcr.io/acmexii/siege-nginx:latest
 
  siege 들어가기:
  kubectl exec pod/siege-c54d6bdc7-8lc8f-it -- /bin/bash
- 
 ```
 
 * 부하테스터 siege 툴을 통한 서킷 브레이커 동작 확인:
-- 동시사용자 100명
-- 60초 동안 실시
-
+ 동시사용자 100명, 60초 동안 실시
 ```
 siege -c100 -t60S -r10 -v --content-type "application/json" 'http://10.100.157.15:8080/orders POST {"orderId":1, "price":123, "status":"Order Start"}'
 ```
-- 부하 발생하여 CB가 발동하여 요청 실패처리하였고, 밀린 부하가 payment에서 처리되면서 다시 product를 받기 시작
+- 부하 발생하여 CB가 발동하여 요청 실패처리하였고, 밀린 부하가 payment에서 처리되면서 다시 order 받기 시작
 
 ![siege오류발생중](https://user-images.githubusercontent.com/87048655/131718991-a9ce9aa2-9896-4ef3-9d04-ada9f87c2cb2.png)
 
 - report
-
 ![siege결과](https://user-images.githubusercontent.com/87048655/131719101-0c483b16-a6f9-493f-abce-9ef8d09aadee.png)
 
 
-- 동시사용자 1명
+- 동시사용자 1명일 때는 100% 수용가능
 ```
 siege -c1 -t60S -r10 -v --content-type "application/json" 'http://10.100.100.106:8080/orders POST {"orderId":1, "price":123, "status":"Order Start"}'
 ```
+![circit_break_t1](https://user-images.githubusercontent.com/87048655/131770856-3a6b7370-7f57-44a8-9114-4b5fc8c277fc.png)
+![circit_break_t1(rslt)](https://user-images.githubusercontent.com/87048655/131770686-9590f4c2-9c16-4137-98c8-4e7cf5c8b8c6.png)
+
 
 ## 오토스케일 아웃
+- 오더(order) 요청 증가 시, reploca 를 동적으로 늘려줄 수 있도록 리소스 설정한다.
+- order > kubernetes > deployment.yml
+![오토스케일링 설정](https://user-images.githubusercontent.com/87048655/131772612-0ad6bb27-4030-4772-8725-a3e179b32282.png)
+
+- deploy 적용여부 확인
+```bash
+kubectl get deploy order -o yaml
+```
+- metrics 설치
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.3.7/components.yaml
+```
+
+- 오더(order)서비스에 대한 replica를 동적으로 늘려주도록 HPA를 설정한다. 설정은 CPU사용량이 1%를 넘어서면 replica를 3개까지 늘려준다.
+```bash
+kubectl autoscale deployment order --cpu-percent=5 --min=1 --max=3
+```
+* 부하테스터 siege 툴을 통한 서킷 브레이커 동작 확인:
+ 동시사용자 100명, 60초 동안 실시 * n번(CPU 사용량이 1% 초과하여 replica를 생성할 때 까지)
+```
+siege -c100 -t60S -r10 -v --content-type "application/json" 'http://10.100.157.15:8080/orders POST {"orderId":1, "price":123, "status":"Order Start"}'
+```
+- kubectl get pod, hpa 명령어로 확인
+- kubectl get deploy order -w로 모니터링 진행
 
 
 
@@ -459,7 +518,7 @@ siege -c1 -t60S -r10 -v --content-type "application/json" 'http://10.100.100.106
 kubectl apply -f kubernetes/deployment_readiness.yml
 ```
 - readiness 옵션이 없는 경우 배포 중 서비스 요청처리 실패 <br>
-![1](https://user-images.githubusercontent.com/26760226/106704039-bec45a00-662e-11eb-9a26-dc5d0c403d03.png)
+
 
 - deployment.yml에 readiness 옵션을 추가 <br>
 ![2](https://user-images.githubusercontent.com/26760226/106704044-bff58700-662e-11eb-8842-4d1bbbead1ef.png)
