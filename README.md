@@ -1,5 +1,5 @@
 # starcoffee
-
+![3a7c37d2542ece1764fd5c48b3ac678a](https://user-images.githubusercontent.com/87048655/131767850-dddfab11-9021-4a5c-aaec-082e7904ca7d.jpg)
 
 # Table of contents
 
@@ -13,7 +13,7 @@
     - [동기식 호출 과 Fallback 처리](#동기식-호출-과-fallback-처리)
     - [비동기식 호출 / 시간적 디커플링 / 장애격리](#비동기식-호출--시간적-디커플링--장애격리)
 - [운영](#운영)
-    - [Deploy / Pipeline](#Deploy--Pipeline)
+    - [Deploy](#Deploy)
     - [동기식 호출 / 서킷 브레이킹 / 장애격리](#동기식-호출--서킷-브레이킹--장애격리)
     - [오토스케일 아웃](#오토스케일-아웃)
     - [무정지 재배포](#무정지-재배포)
