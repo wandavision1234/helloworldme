@@ -234,7 +234,7 @@ pom.xml 설정 <br>
 
 ![poliglot1](https://user-images.githubusercontent.com/87048655/131765372-cedd53bf-68fa-4fed-a905-b70642f9411f.png)
 
-- 생산(make) 조회
+- 생산(make) 조회<br>
 ![poliglot2](https://user-images.githubusercontent.com/87048655/131765472-6fbf278d-d603-4397-93e4-1c55a3c28163.png)
 
 ## Gateway 적용
@@ -304,7 +304,7 @@ transfer-encoding: chunked
 
 
 
-- 주문을 받은 직후(@PostPersist) 결제를 요청하도록 처리
+- 주문을 받은 직후(@PostPersist) 결제를 요청하도록 처리  <br>
 ![order-payment호출](https://user-images.githubusercontent.com/87048655/131720220-12bebf26-66c0-4703-b93d-b8461456c9c0.png)
 
 - 동기식 호출에서는 호출 시간에 따른 타임 커플링이 발생하며, 결제 시스템이 장애가 나면 주문도 못받는다는 것을 확인:
@@ -343,9 +343,9 @@ CQRS 구현을 위해 고객의 예약 상황을 확인할 수 있는 Mypage를 
 결제(payment)이 이루어진 후에 생산(make)으로 이를 알려주는 행위는 비 동기식으로 처리하여 생산(make)의 처리를 위하여 주문(order)이 블로킹 되지 않아도록 처리한다. <br>
  
 - 이를 위하여 결제이력에 기록을 남긴 후에 곧바로 결제승인이 되었다는 도메인 이벤트를 카프카로 송출한다(Publish) <br>
- ![비동기식_payment](https://user-images.githubusercontent.com/87048655/131721010-91ac60ac-feee-45f0-b688-2e16edad78a1.png)
+![비동기식_payment](https://user-images.githubusercontent.com/87048655/131721010-91ac60ac-feee-45f0-b688-2e16edad78a1.png)
 
-- 생산 서비스에서는 결제승인 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다: <br>
+- 생산 서비스에서는 결제승인 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다 <br>
 ![make_handler](https://user-images.githubusercontent.com/87048655/131721373-2b28c28c-2254-4204-a0b2-4cbf9eee3486.png)
  
 생산 시스템은 주문/결제와 완전히 분리되어있으며, 이벤트 수신에 따라 처리되기 때문에, 생산시스템이 유지보수로 인해 잠시 내려간 상태라도 주문을 받는데 문제가 없다:(시간적 디커플링): <br>
@@ -450,7 +450,7 @@ Spring Spring FeignClient + Hystrix 옵션을 사용하여 테스팅 진행 신�
 
 ![HISTRIX](https://user-images.githubusercontent.com/87048655/131716947-76478178-f89a-4690-a6cb-e57a59fb2aed.png)
 
-- 강제 부하설정
+- 강제 부하설정<br>
 ![payment_부하처리](https://user-images.githubusercontent.com/87048655/131771061-8ccb63c2-ccff-4d46-bb2f-d674616276fb.png)
 
 * siege
@@ -471,7 +471,7 @@ siege -c100 -t60S -r10 -v --content-type "application/json" 'http://10.100.157.1
 
 ![siege오류발생중](https://user-images.githubusercontent.com/87048655/131718991-a9ce9aa2-9896-4ef3-9d04-ada9f87c2cb2.png)
 
-- report
+- report<br>
 ![siege결과](https://user-images.githubusercontent.com/87048655/131719101-0c483b16-a6f9-493f-abce-9ef8d09aadee.png)
 
 
@@ -485,8 +485,8 @@ siege -c1 -t60S -r10 -v --content-type "application/json" 'http://10.100.100.106
 
 ## 오토스케일 아웃
 - 오더(order) 요청 증가 시, reploca 를 동적으로 늘려줄 수 있도록 리소스 설정한다.
-- order > kubernetes > deployment.yml
-![오토스케일링 설정](https://user-images.githubusercontent.com/87048655/131772612-0ad6bb27-4030-4772-8725-a3e179b32282.png)
+- order > kubernetes > deployment.yml<br>
+![hpa_YML설정](https://user-images.githubusercontent.com/87048655/131775498-6dd21395-823c-424d-8b08-3eee16ce1da1.png)
 
 - deploy 적용여부 확인
 ```bash
@@ -518,10 +518,10 @@ siege -c100 -t60S -r10 -v --content-type "application/json" 'http://10.100.157.1
 kubectl apply -f kubernetes/deployment_readiness.yml
 ```
 - readiness 옵션이 없는 경우 배포 중 서비스 요청처리 실패 <br>
-
+![readness주석](https://user-images.githubusercontent.com/87048655/131774648-5e5b78a3-155d-4854-94fb-1073d425d026.png)
 
 - deployment.yml에 readiness 옵션을 추가 <br>
-![2](https://user-images.githubusercontent.com/26760226/106704044-bff58700-662e-11eb-8842-4d1bbbead1ef.png)
+![readness설정](https://user-images.githubusercontent.com/87048655/131774652-1ff0b360-ddaf-4dad-8111-c77a5d63debd.png)
 
 - readiness적용된 deployment.yml 적용
 ```bash
@@ -625,6 +625,8 @@ kubectl get pod order-74c76b478-mlpf4 -o yaml -n coffee
 
 ## Self-healing (Liveness Probe)
 
+![liveness주석](https://user-images.githubusercontent.com/87048655/131774897-42d3c10d-7112-4f0f-b201-00cd3f0d6548.png)
+
 - deployment.yml 에 Liveness Probe 옵션 추가
 ```
 cd ~/coffee/product/kubernetes
@@ -637,7 +639,7 @@ livenessProbe:
 	initialDelaySeconds: 5
 	periodSeconds: 5
 ```
-![image](https://user-images.githubusercontent.com/75309297/106708030-8f651b80-6635-11eb-979a-bee010a28e86.png)
+![liveness설정](https://user-images.githubusercontent.com/87048655/131774899-54c552f1-a759-4815-b5a4-505324bbea30.png)
 
 - product pod에 liveness가 적용된 부분 확인
 ```
