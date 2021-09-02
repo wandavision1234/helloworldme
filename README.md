@@ -626,11 +626,6 @@ Liveness Probe가 Pod를 재기동하는지 확인
 kubectl get deploy mypage -o yaml
 ```
 
-* 부하테스터 siege 툴을 통한 서킷 브레이커 동작 확인:
- 동시사용자 100명, 60초 동안 실시 * n번(CPU 사용량이 1% 초과하여 replica를 생성할 때 까지)
-```
-siege -c100 -t60S -r10 -v --content-type "application/json" 'http://10.100.157.15:8080/orders POST {"orderId":1, "price":123, "status":"Order Start"}'
-```
 
 - mypage 서비스의 liveness가 발동되어 2번 retry 시도 한 부분 확인
 ```
