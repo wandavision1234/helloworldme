@@ -526,6 +526,78 @@ kubectl set image deploy order order=980880891166.dkr.ecr.ap-northeast-2.amazona
 ```
 - readiness 옵션이 없는 경우 배포 중 서비스 요청처리 실패 <br>
 ![readness주석](https://user-images.githubusercontent.com/87048655/131774648-5e5b78a3-155d-4854-94fb-1073d425d026.png)
+kubectl get deploy mypage -o yaml
+```bash
+PS D:\starcoffee\mypage\kubernetes> kubectl get deploy mypage -o yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "2"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"mypage"},"name":"mypage","namespace":"default"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"mypage"}},"template":{"metadata":{"labels":{"app":"mypage"}},"spec":{"containers":[{"image":"980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-mypage:v2","name":"mypage","ports":[{"containerPort":8080}]}]}}}}
+  creationTimestamp: "2021-09-02T02:09:37Z"
+  generation: 2
+  labels:
+    app: mypage
+  name: mypage
+  namespace: default
+  resourceVersion: "391334"
+  selfLink: /apis/apps/v1/namespaces/default/deployments/mypage
+  uid: ed29a700-a7f8-4fa6-8a76-dc437949e46c
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: mypage
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mypage
+    spec:
+      containers:
+      - image: 980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-mypage:v2
+        imagePullPolicy: IfNotPresent
+        name: mypage
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      - image: 980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-mypage:v2
+        imagePullPolicy: IfNotPresent
+        resources: {}
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+  conditions:
+  - lastTransitionTime: "2021-09-02T02:09:37Z"
+    message: ReplicaSet "mypage-d97648bf5" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  - lastTransitionTime: "2021-09-02T05:14:57Z"
+    lastUpdateTime: "2021-09-02T05:14:57Z"
+    message: Deployment does not have minimum availability.
+    reason: MinimumReplicasUnavailable
+    status: "False"
+    type: Available
+  observedGeneration: 2
+  replicas: 1
+  unavailableReplicas: 1
+  updatedReplicas: 1
+ ``` 
+  
 ![readness_error](https://user-images.githubusercontent.com/87048655/131782076-12813d72-1123-4ca0-a8e6-f3e1f3ce83eb.png)
 ![readness_result](https://user-images.githubusercontent.com/87048655/131782302-1aa9e6a5-84df-4f9d-bf54-5bc010f6a290.png)
 
