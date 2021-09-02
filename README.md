@@ -492,10 +492,13 @@ siege -c1 -t60S -r10 -v --content-type "application/json" 'http://10.100.100.106
 ```bash
 kubectl get deploy order -o yaml
 ```
+![hpa설정확인](https://user-images.githubusercontent.com/87048655/131780476-4e4807c5-9226-46c9-b55a-063b50eea1b5.png)
+
 - metrics 설치
 ```bash
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.3.7/components.yaml
 ```
+![matrics 설치](https://user-images.githubusercontent.com/87048655/131780537-7937de87-6a81-4b4b-8c62-cfd4a2828994.png)
 
 - 오더(order)서비스에 대한 replica를 동적으로 늘려주도록 HPA를 설정한다. 설정은 CPU사용량이 1%를 넘어서면 replica를 3개까지 늘려준다.
 ```bash
@@ -514,30 +517,30 @@ siege -c100 -t60S -r10 -v --content-type "application/json" 'http://10.100.157.1
 ## 무정지 재배포
 - 먼저 무정지 재배포가 100% 되는 것인지 확인하기 위해서 Autoscale 이나 CB 설정을 제거함
 - seige 로 배포작업 직전에 워크로드를 모니터링 함
+- 새로운 버전의 이미지로 교체
 ```bash
-kubectl apply -f kubernetes/deployment_readiness.yml
+siege -c100 -t60S -r10 -v --content-type "application/json" 'http://10.100.157.15:8080/orders POST {"orderId":1, "price":123, "status":"Order Start"}'
+
+kubectl set image deploy order order=980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-order:v16
+
 ```
 - readiness 옵션이 없는 경우 배포 중 서비스 요청처리 실패 <br>
 ![readness주석](https://user-images.githubusercontent.com/87048655/131774648-5e5b78a3-155d-4854-94fb-1073d425d026.png)
+![readness_error](https://user-images.githubusercontent.com/87048655/131782076-12813d72-1123-4ca0-a8e6-f3e1f3ce83eb.png)
+![readness_result](https://user-images.githubusercontent.com/87048655/131782302-1aa9e6a5-84df-4f9d-bf54-5bc010f6a290.png)
 
 - deployment.yml에 readiness 옵션을 추가 <br>
 ![readness설정](https://user-images.githubusercontent.com/87048655/131774652-1ff0b360-ddaf-4dad-8111-c77a5d63debd.png)
 
-- readiness적용된 deployment.yml 적용
-```bash
-kubectl apply -f kubernetes/deployment.yml
-```
 - 새로운 버전의 이미지로 교체
 ```bash
-az acr build --registry skccteam03 --image skccteam03.azurecr.io/customercenter:v1 .
-kubectl set image deploy customercenter customercenter=skccteam03.azurecr.io/customercenter:v1 -n coffee
+siege -c100 -t60S -r10 -v --content-type "application/json" 'http://10.100.157.15:8080/orders POST {"orderId":1, "price":123, "status":"Order Start"}'
+
+kubectl set image deploy order order=980880891166.dkr.ecr.ap-northeast-2.amazonaws.com/starcoffee-order:v16
+
 ```
+![readness_success(100%)](https://user-images.githubusercontent.com/87048655/131782299-0c379a35-d72d-4d4e-b49e-567c3073f748.png)
 
-- 기존 버전과 새 버전의 store pod 공존 중 <br>
-![3](https://user-images.githubusercontent.com/26760226/106704049-bff58700-662e-11eb-8199-a20723c5245d.png)
-
-- Availability: 100.00 % 확인 <br>
-![4](https://user-images.githubusercontent.com/26760226/106704050-c08e1d80-662e-11eb-9214-9136748e1336.png)
 
 ## Config Map
 
@@ -624,6 +627,8 @@ kubectl get pod order-74c76b478-mlpf4 -o yaml -n coffee
 
 
 ## Self-healing (Liveness Probe)
+임의로 Pod에 Health check에 문제를 발생시키고, 
+Liveness Probe가 Pod를 재기동하는지 확인
 
 ![liveness주석](https://user-images.githubusercontent.com/87048655/131774897-42d3c10d-7112-4f0f-b201-00cd3f0d6548.png)
 
@@ -647,9 +652,5 @@ kubectl describe deploy product -n coffee
 ```
 ![image](https://user-images.githubusercontent.com/75309297/106708456-3f3a8900-6636-11eb-93af-07b754f2944a.png)
 
-- product 서비스의 liveness가 발동되어 5번 retry 시도 한 부분 확인
-```
-kubectl get pod -n coffee
-```
-
-![image](https://user-images.githubusercontent.com/75309297/106707672-f7ffc880-6634-11eb-9b35-032348772306.png)
+- order 서비스의 liveness가 발동되어 2번 retry 시도 한 부분 확인
+![liveness](https://user-images.githubusercontent.com/87048655/131783796-6cbe0f02-4788-4449-b792-352a882492ed.png)
