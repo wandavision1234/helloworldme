@@ -1,5 +1,5 @@
 # starcoffee
-![3a7c37d2542ece1764fd5c48b3ac678a](https://user-images.githubusercontent.com/87048655/131767850-dddfab11-9021-4a5c-aaec-082e7904ca7d.jpg)
+![coffee_log](https://user-images.githubusercontent.com/87048655/131767943-7f467f82-105a-4c4c-bdae-06026d8c6fc4.png)
 
 # Table of contents
 
