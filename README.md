@@ -643,5 +643,5 @@ kubectl get deploy mypage -o yaml
 siege -c100 -t60S -r10 -v --content-type "application/json" 'http://10.100.157.15:8080/orders POST {"orderId":1, "price":123, "status":"Order Start"}'
 ```
 
-- order 서비스의 liveness가 발동되어 2번 retry 시도 한 부분 확인
+- mypage 서비스의 liveness가 발동되어 2번 retry 시도 한 부분 확인
 ![liveness](https://user-images.githubusercontent.com/87048655/131783796-6cbe0f02-4788-4449-b792-352a882492ed.png)
