@@ -10,6 +10,7 @@
     - [DDD 의 적용](#ddd-의-적용)
     - [폴리글랏 퍼시스턴스](#폴리글랏-퍼시스턴스)
     - [Gateway 적용](#gateway-적용)
+    - [CQRS](#CQRS)
     - [동기식 호출 과 Fallback 처리](#동기식-호출-과-fallback-처리)
     - [비동기식 호출 / 시간적 디커플링 / 장애격리](#비동기식-호출--시간적-디커플링--장애격리)
 - [운영](#운영)
@@ -17,7 +18,6 @@
     - [동기식 호출 / 서킷 브레이킹 / 장애격리](#동기식-호출--서킷-브레이킹--장애격리)
     - [오토스케일 아웃](#오토스케일-아웃)
     - [무정지 재배포](#무정지-재배포)
-    - [Config Map](#config-map)
     - [Self-healing (Liveness Probe)](#self-healing-liveness-probe)
 
 # 서비스 시나리오
@@ -295,6 +295,11 @@ transfer-encoding: chunked
 }
 ```
 
+## CQRS
+
+CQRS 구현을 위해 고객의 예약 상황을 확인할 수 있는 Mypage를 구성. <br>
+
+![cqrs](https://user-images.githubusercontent.com/87048655/131765858-c454f9de-c44c-4b9c-afde-05ba5f7dd2b9.png)
 
 
 ## 동기식 호출 과 Fallback 처리
@@ -331,15 +336,6 @@ mvn spring-boot:run
 http POST http://localhost:8081/orders orderId=1 price=1000 status="order start"
 ```
 ![동기식호출(정상)](https://user-images.githubusercontent.com/87048655/131766370-b8fb1238-64a9-4621-96b2-223e08a21fb8.png)
-
-
-
-## CQRS
-
-CQRS 구현을 위해 고객의 예약 상황을 확인할 수 있는 Mypage를 구성. <br>
-
-![cqrs](https://user-images.githubusercontent.com/87048655/131765858-c454f9de-c44c-4b9c-afde-05ba5f7dd2b9.png)
-
 
 
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 
@@ -617,10 +613,6 @@ kubectl set image deploy order order=980880891166.dkr.ecr.ap-northeast-2.amazona
 
 ```
 ![readness_success(100%)](https://user-images.githubusercontent.com/87048655/131782299-0c379a35-d72d-4d4e-b49e-567c3073f748.png)
-
-
-## Config Map
-
 
 
 ## Self-healing (Liveness Probe)
