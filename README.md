@@ -630,27 +630,18 @@ kubectl get pod order-74c76b478-mlpf4 -o yaml -n coffee
 임의로 Pod에 Health check에 문제를 발생시키고, 
 Liveness Probe가 Pod를 재기동하는지 확인
 
-![liveness주석](https://user-images.githubusercontent.com/87048655/131774897-42d3c10d-7112-4f0f-b201-00cd3f0d6548.png)
+![liveness설정2](https://user-images.githubusercontent.com/87048655/131784558-681235a1-5bb0-4876-b972-10c7a7d1fa82.png)
 
-- deployment.yml 에 Liveness Probe 옵션 추가
+- liveness가 적용된 부분 확인
 ```
-cd ~/coffee/product/kubernetes
-vi deployment.yml
+kubectl get deploy mypage -o yaml
+```
 
-(아래 설정 변경)
-livenessProbe:
-	tcpSocket:
-	  port: 8081
-	initialDelaySeconds: 5
-	periodSeconds: 5
+* 부하테스터 siege 툴을 통한 서킷 브레이커 동작 확인:
+ 동시사용자 100명, 60초 동안 실시 * n번(CPU 사용량이 1% 초과하여 replica를 생성할 때 까지)
 ```
-![liveness설정](https://user-images.githubusercontent.com/87048655/131774899-54c552f1-a759-4815-b5a4-505324bbea30.png)
-
-- product pod에 liveness가 적용된 부분 확인
+siege -c100 -t60S -r10 -v --content-type "application/json" 'http://10.100.157.15:8080/orders POST {"orderId":1, "price":123, "status":"Order Start"}'
 ```
-kubectl describe deploy product -n coffee
-```
-![image](https://user-images.githubusercontent.com/75309297/106708456-3f3a8900-6636-11eb-93af-07b754f2944a.png)
 
 - order 서비스의 liveness가 발동되어 2번 retry 시도 한 부분 확인
 ![liveness](https://user-images.githubusercontent.com/87048655/131783796-6cbe0f02-4788-4449-b792-352a882492ed.png)
