@@ -11,7 +11,7 @@
     - [폴리글랏 퍼시스턴스](#폴리글랏-퍼시스턴스)
     - [Gateway 적용](#gateway-적용)
     - [CQRS](#CQRS)
-    - [동기식 호출 과 Fallback 처리](#동기식-호출-과-fallback-처리)
+    - [동기식 호출](#동기식-호출)
     - [비동기식 호출 / 시간적 디커플링 / 장애격리](#비동기식-호출--시간적-디커플링--장애격리)
 - [운영](#운영)
     - [Deploy](#Deploy)
@@ -288,7 +288,7 @@ CQRS 구현을 위해 고객의 예약 상황을 확인할 수 있는 Mypage를 
 ![cqrs](https://user-images.githubusercontent.com/87048655/131765858-c454f9de-c44c-4b9c-afde-05ba5f7dd2b9.png)
 
 
-## 동기식 호출 과 Fallback 처리
+## 동기식 호출
 
 분석단계에서의 조건 중 하나로 주문(order) -> 결제(payment) 간의 호출은 동기식 일관성을 유지하는 트랜잭션으로 처리하기로 하였다. 
 호출 프로토콜은 이미 앞서 Rest Repository 에 의해 노출되어있는 REST 서비스를 FeignClient 를 이용하여 호출하도록 한다. 
