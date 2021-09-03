@@ -435,7 +435,7 @@ Spring Spring FeignClient + Hystrix 옵션을 사용하여 테스팅 진행 신�
 - Hystrix 를 설정:  요청처리 쓰레드에서 처리시간이 610 밀리가 넘어서기 시작하여 어느정도 유지되면 CB 회로가 닫히도록 (요청을 빠르게 실패처리, 차단) 설정
 - order > application.yml
 
-![HISTRIX](https://user-images.githubusercontent.com/87048655/131716947-76478178-f89a-4690-a6cb-e57a59fb2aed.png)
+![histrix](https://user-images.githubusercontent.com/87048655/131932795-057292cb-2782-4f51-84da-4cfcbe27482d.png)
 
 - 강제 부하설정<br>
 ![payment_부하처리](https://user-images.githubusercontent.com/87048655/131771061-8ccb63c2-ccff-4d46-bb2f-d674616276fb.png)
